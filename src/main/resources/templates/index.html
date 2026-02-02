@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rental Property Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            padding: 0 30px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: #764ba2;
+        }
+
+        .tab.active {
+            color: #764ba2;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stat-card.pending {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        }
+
+        .stat-card.maintenance {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .properties-grid, .maintenance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .property-card, .maintenance-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .property-card:hover, .maintenance-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .property-card.rent-pending {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .property-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-available {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-rented {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .status-maintenance {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status-open {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status-in.progress {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .status-resolved {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-closed {
+            background: #6b7280;
+            color: white;
+        }
+
+        .priority-urgent {
+            background: #ef4444;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .priority-high {
+            background: #f59e0b;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .priority-medium {
+            background: #3b82f6;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .priority-low {
+            background: #10b981;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .rent-pending-badge {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            font-weight: 600;
+            background: #ef4444;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .property-card h3, .maintenance-card h3 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .property-details, .maintenance-details {
+            margin: 15px 0;
+        }
+
+        .property-details p, .maintenance-details p {
+            margin: 8px 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .property-details strong, .maintenance-details strong {
+            color: #333;
+            min-width: 120px;
+        }
+
+        .rent-info {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .rent-info.overdue {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+        }
+
+        .property-actions, .maintenance-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .btn-paid {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-paid:hover {
+            background: #059669;
+        }
+
+        .btn-resolve {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-resolve:hover {
+            background: #059669;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content.small {
+            max-width: 450px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #764ba2;
+            font-size: 2em;
+        }
+
+        .close {
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .properties-grid, .maintenance-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                justify-content: stretch;
+            }
+
+            .filter-group select {
+                flex: 1;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🏠 Rental Property Management</h1>
+        <p>Manage your rental properties with ease</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('all', event)">All Properties</button>
+        <button class="tab" onclick="switchTab('pending', event)">Rent Pending</button>
+        <button class="tab" onclick="switchTab('maintenance', event)">Maintenance</button>
+    </div>
+
+    <div class="content">
+        <!-- All Properties Tab -->
+        <div id="allTab" class="tab-content active">
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <h3 id="totalProperties">0</h3>
+                    <p>Total Properties</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="availableProperties">0</h3>
+                    <p>Available</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="rentedProperties">0</h3>
+                    <p>Rented</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="maintenanceProperties">0</h3>
+                    <p>Maintenance</p>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" onclick="openModal()">+ Add New Property</button>
+                <div class="filter-group">
+                    <select id="statusFilter" onchange="filterProperties()">
+                        <option value="all">All Status</option>
+                        <option value="Available">Available</option>
+                        <option value="Rented">Rented</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                    <select id="typeFilter" onchange="filterProperties()">
+                        <option value="all">All Types</option>
+                        <option value="Apartment">Apartment</option>
+                        <option value="House">House</option>
+                        <option value="Condo">Condo</option>
+                        <option value="Studio">Studio</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="properties-grid" id="propertiesGrid"></div>
+        </div>
+
+        <!-- Rent Pending Tab -->
+        <div id="pendingTab" class="tab-content">
+            <div class="stats">
+                <div class="stat-card pending">
+                    <h3 id="pendingCount">0</h3>
+                    <p>Rent Pending</p>
+                </div>
+                <div class="stat-card pending">
+                    <h3 id="overdueCount">0</h3>
+                    <p>Overdue</p>
+                </div>
+                <div class="stat-card pending">
+                    <h3 id="totalPendingAmount">$0</h3>
+                    <p>Total Pending</p>
+                </div>
+            </div>
+
+            <div class="properties-grid" id="pendingGrid"></div>
+        </div>
+
+        <!-- Maintenance Tab -->
+        <div id="maintenanceTab" class="tab-content">
+            <div class="stats">
+                <div class="stat-card maintenance">
+                    <h3 id="totalRequests">0</h3>
+                    <p>Total Requests</p>
+                </div>
+                <div class="stat-card maintenance">
+                    <h3 id="openRequests">0</h3>
+                    <p>Open</p>
+                </div>
+                <div class="stat-card maintenance">
+                    <h3 id="urgentRequests">0</h3>
+                    <p>Urgent</p>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" onclick="openMaintenanceModal()">+ New Maintenance Request</button>
+                <div class="filter-group">
+                    <select id="maintenanceStatusFilter" onchange="filterMaintenance()">
+                        <option value="all">All Status</option>
+                        <option value="Open">Open</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                    <select id="maintenancePriorityFilter" onchange="filterMaintenance()">
+                        <option value="all">All Priorities</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="maintenance-grid" id="maintenanceGrid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Property Modal -->
+<div id="propertyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add New Property</h2>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        <form id="propertyForm" onsubmit="saveProperty(event)">
+            <input type="hidden" id="propertyId">
+
+            <div class="form-group">
+                <label for="address">Address *</label>
+                <input type="text" id="address" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="type">Property Type *</label>
+                    <select id="type" required>
+                        <option value="">Select Type</option>
+                        <option value="Apartment">Apartment</option>
+                        <option value="House">House</option>
+                        <option value="Condo">Condo</option>
+                        <option value="Studio">Studio</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Status *</label>
+                    <select id="status" required onchange="toggleTenantFields()">
+                        <option value="">Select Status</option>
+                        <option value="Available">Available</option>
+                        <option value="Rented">Rented</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bedrooms">Bedrooms *</label>
+                    <input type="number" id="bedrooms" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="bathrooms">Bathrooms *</label>
+                    <input type="number" id="bathrooms" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="rentAmount">Rent Amount ($) *</label>
+                <input type="number" id="rentAmount" step="0.01" min="0" required>
+            </div>
+
+            <div id="tenantFields" style="display: none;">
+                <h3 style="color: #764ba2; margin: 20px 0 15px;">Tenant Information</h3>
+
+                <div class="form-group">
+                    <label for="tenantName">Tenant Name</label>
+                    <input type="text" id="tenantName">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tenantEmail">Tenant Email</label>
+                        <input type="email" id="tenantEmail">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tenantPhone">Tenant Phone</label>
+                        <input type="tel" id="tenantPhone">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="rentDueDay">Rent Due Day (1-31)</label>
+                    <input type="number" id="rentDueDay" min="1" max="31" placeholder="e.g., 1 for 1st of month">
+                </div>
+
+                <div class="form-group">
+                    <label for="lastPaidDate">Last Rent Paid Date</label>
+                    <input type="date" id="lastPaidDate">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                Save Property
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content small">
+        <div class="modal-header">
+            <h2>Record Payment</h2>
+            <span class="close" onclick="closePaymentModal()">&times;</span>
+        </div>
+        <form id="paymentForm" onsubmit="submitPayment(event)">
+            <input type="hidden" id="paymentPropertyId">
+
+            <div class="form-group">
+                <label for="paymentDate">Payment Date *</label>
+                <input type="date" id="paymentDate" required>
+            </div>
+
+            <div class="form-group">
+                <label for="paymentMode">Payment Mode *</label>
+                <select id="paymentMode" required>
+                    <option value="">Select Payment Mode</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Check">Check</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Online Payment">Online Payment</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="Debit Card">Debit Card</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="paymentNotes">Notes (Optional)</label>
+                <textarea id="paymentNotes" rows="3" placeholder="Add any additional notes..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                Confirm Payment
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Maintenance Request Modal -->
+<div id="maintenanceModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="maintenanceModalTitle">New Maintenance Request</h2>
+            <span class="close" onclick="closeMaintenanceModal()">&times;</span>
+        </div>
+        <form id="maintenanceForm" onsubmit="saveMaintenanceRequest(event)">
+            <input type="hidden" id="maintenanceId">
+
+            <div class="form-group">
+                <label for="maintenanceProperty">Property *</label>
+                <select id="maintenanceProperty" required onchange="updateTenantInfo()">
+                    <option value="">Select Property</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="maintenanceTenant">Tenant Name *</label>
+                <input type="text" id="maintenanceTenant" required>
+            </div>
+
+            <div class="form-group">
+                <label for="maintenanceTenantPhone">Tenant Phone</label>
+                <input type="tel" id="maintenanceTenantPhone">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="maintenanceCategory">Category *</label>
+                    <select id="maintenanceCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="Plumbing">Plumbing</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Appliance">Appliance</option>
+                        <option value="HVAC">HVAC (Heating/Cooling)</option>
+                        <option value="Structural">Structural</option>
+                        <option value="Pest Control">Pest Control</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="maintenancePriority">Priority *</label>
+                    <select id="maintenancePriority" required>
+                        <option value="">Select Priority</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="maintenanceIssue">Issue Summary *</label>
+                <input type="text" id="maintenanceIssue" required placeholder="e.g., Dishwasher not working">
+            </div>
+
+            <div class="form-group">
+                <label for="maintenanceDescription">Detailed Description *</label>
+                <textarea id="maintenanceDescription" required rows="4" placeholder="Describe the issue in detail..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                Submit Request
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Resolve Maintenance Modal -->
+<div id="resolveModal" class="modal">
+    <div class="modal-content small">
+        <div class="modal-header">
+            <h2>Resolve Maintenance Request</h2>
+            <span class="close" onclick="closeResolveModal()">&times;</span>
+        </div>
+        <form id="resolveForm" onsubmit="submitResolution(event)">
+            <input type="hidden" id="resolveRequestId">
+
+            <div class="form-group">
+                <label for="resolvedBy">Resolved By *</label>
+                <input type="text" id="resolvedBy" required placeholder="Name of person/company">
+            </div>
+
+            <div class="form-group">
+                <label for="resolutionNotes">Resolution Notes *</label>
+                <textarea id="resolutionNotes" required rows="4" placeholder="Describe what was done to fix the issue..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                Mark as Resolved
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allProperties = [];
+    let allMaintenanceRequests = [];
+    const API_URL = '/api/properties';
+    const MAINTENANCE_API_URL = '/api/maintenance';
+    let currentTab = 'all';
+
+    // Load data on page load
+    window.onload = function() {
+        loadProperties();
+        loadMaintenanceRequests();
+        document.getElementById('paymentDate').valueAsDate = new Date();
+    };
+
+    // Switch tabs
+    function switchTab(tab, event) {
+        currentTab = tab;
+
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+        if (tab === 'all') {
+            document.getElementById('allTab').classList.add('active');
+            filterProperties();
+        } else if (tab === 'pending') {
+            document.getElementById('pendingTab').classList.add('active');
+            displayPendingRent();
+        } else if (tab === 'maintenance') {
+            document.getElementById('maintenanceTab').classList.add('active');
+            filterMaintenance();
+        }
+    }
+
+    // Load all properties
+    async function loadProperties() {
+        try {
+            const response = await fetch(API_URL);
+            allProperties = await response.json();
+            updateStats();
+            populatePropertyDropdown();
+            if (currentTab === 'all') {
+                displayProperties(allProperties);
+            } else if (currentTab === 'pending') {
+                displayPendingRent();
+            }
+        } catch (error) {
+            console.error('Error loading properties:', error);
+        }
+    }
+
+    // Load all maintenance requests
+    async function loadMaintenanceRequests() {
+        try {
+            const response = await fetch(MAINTENANCE_API_URL);
+            allMaintenanceRequests = await response.json();
+            updateMaintenanceStats();
+            if (currentTab === 'maintenance') {
+                filterMaintenance();
+            }
+        } catch (error) {
+            console.error('Error loading maintenance requests:', error);
+        }
+    }
+
+    // Populate property dropdown in maintenance modal
+    function populatePropertyDropdown() {
+        const select = document.getElementById('maintenanceProperty');
+        select.innerHTML = '<option value="">Select Property</option>';
+
+        allProperties.filter(p => p.status === 'Rented').forEach(property => {
+            const option = document.createElement('option');
+            option.value = property.id;
+            option.textContent = property.address;
+            option.dataset.tenantName = property.tenantName || '';
+            option.dataset.tenantPhone = property.tenantPhone || '';
+            select.appendChild(option);
+        });
+    }
+
+    // Update tenant info when property is selected
+    function updateTenantInfo() {
+        const select = document.getElementById('maintenanceProperty');
+        const selectedOption = select.options[select.selectedIndex];
+
+        if (selectedOption.value) {
+            document.getElementById('maintenanceTenant').value = selectedOption.dataset.tenantName || '';
+            document.getElementById('maintenanceTenantPhone').value = selectedOption.dataset.tenantPhone || '';
+        }
+    }
+
+    // Calculate if rent is pending
+    function isRentPending(property) {
+        if (property.status !== 'Rented' || !property.rentDueDay) {
+            return false;
+        }
+
+        const today = new Date();
+        const lastPaid = property.lastPaidDate ? new Date(property.lastPaidDate) : null;
+
+        const lastDueDate = new Date(today.getFullYear(), today.getMonth(), property.rentDueDay);
+        if (lastDueDate > today) {
+            lastDueDate.setMonth(lastDueDate.getMonth() - 1);
+        }
+
+        if (!lastPaid || lastPaid < lastDueDate) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // Calculate days overdue
+    function getDaysOverdue(property) {
+        if (!property.rentDueDay) return 0;
+
+        const today = new Date();
+        const lastDueDate = new Date(today.getFullYear(), today.getMonth(), property.rentDueDay);
+        if (lastDueDate > today) {
+            lastDueDate.setMonth(lastDueDate.getMonth() - 1);
+        }
+
+        const diffTime = today - lastDueDate;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays > 0 ? diffDays : 0;
+    }
+
+    // Update property statistics
+    function updateStats() {
+        document.getElementById('totalProperties').textContent = allProperties.length;
+        document.getElementById('availableProperties').textContent =
+            allProperties.filter(p => p.status === 'Available').length;
+        document.getElementById('rentedProperties').textContent =
+            allProperties.filter(p => p.status === 'Rented').length;
+        document.getElementById('maintenanceProperties').textContent =
+            allProperties.filter(p => p.status === 'Maintenance').length;
+
+        const pendingProperties = allProperties.filter(p => isRentPending(p));
+        const overdueProperties = pendingProperties.filter(p => getDaysOverdue(p) > 0);
+        const totalPending = pendingProperties.reduce((sum, p) => sum + parseFloat(p.rentAmount || 0), 0);
+
+        document.getElementById('pendingCount').textContent = pendingProperties.length;
+        document.getElementById('overdueCount').textContent = overdueProperties.length;
+        document.getElementById('totalPendingAmount').textContent = '$' + totalPending.toLocaleString();
+    }
+
+    // Update maintenance statistics
+    function updateMaintenanceStats() {
+        const openRequests = allMaintenanceRequests.filter(r => r.status === 'Open' || r.status === 'In Progress');
+        const urgentRequests = allMaintenanceRequests.filter(r => r.priority === 'Urgent' && r.status !== 'Resolved' && r.status !== 'Closed');
+
+        document.getElementById('totalRequests').textContent = allMaintenanceRequests.length;
+        document.getElementById('openRequests').textContent = openRequests.length;
+        document.getElementById('urgentRequests').textContent = urgentRequests.length;
+    }
+
+    // Display properties
+    function displayProperties(properties) {
+        const grid = document.getElementById('propertiesGrid');
+
+        if (properties.length === 0) {
+            grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <h3>No Properties Found</h3>
+                        <p>Start by adding your first property</p>
+                    </div>
+                `;
+            return;
+        }
+
+        grid.innerHTML = properties.map(property => {
+            const rentPending = isRentPending(property);
+
+            return `
+                <div class="property-card ${rentPending ? 'rent-pending' : ''}">
+                    <span class="property-status status-${property.status.toLowerCase()}">${property.status}</span>
+                    ${rentPending ? '<span class="rent-pending-badge">Rent Pending</span>' : ''}
+                    <h3>${property.address}</h3>
+                    <div class="property-details">
+                        <p><strong>Type:</strong> ${property.type}</p>
+                        <p><strong>Bedrooms:</strong> ${property.bedrooms}</p>
+                        <p><strong>Bathrooms:</strong> ${property.bathrooms}</p>
+                        <p><strong>Rent:</strong> $${parseFloat(property.rentAmount).toLocaleString()}/month</p>
+                        ${property.status === 'Rented' && property.tenantName ? `
+                            <p><strong>Tenant:</strong> ${property.tenantName}</p>
+                            ${property.tenantEmail ? `<p><strong>Email:</strong> ${property.tenantEmail}</p>` : ''}
+                            ${property.tenantPhone ? `<p><strong>Phone:</strong> ${property.tenantPhone}</p>` : ''}
+                            ${property.rentDueDay ? `<p><strong>Due Date:</strong> ${property.rentDueDay}${getOrdinalSuffix(property.rentDueDay)} of month</p>` : ''}
+                        ` : ''}
+                        ${property.description ? `<p style="margin-top: 10px; color: #666;">${property.description}</p>` : ''}
+                    </div>
+                    <div class="property-actions">
+                        <button class="btn-small btn-edit" onclick="editProperty(${property.id})">Edit</button>
+                        <button class="btn-small btn-delete" onclick="deleteProperty(${property.id})">Delete</button>
+                        ${rentPending ? `<button class="btn-small btn-paid" onclick="openPaymentModal(${property.id})">Mark Paid</button>` : ''}
+                    </div>
+                </div>
+            `}).join('');
+    }
+
+    // Display pending rent properties
+    function displayPendingRent() {
+        const grid = document.getElementById('pendingGrid');
+        const pendingProperties = allProperties.filter(p => isRentPending(p));
+
+        if (pendingProperties.length === 0) {
+            grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <h3>🎉 All Rent Payments Up to Date!</h3>
+                        <p>No pending rent payments at this time</p>
+                    </div>
+                `;
+            return;
+        }
+
+        pendingProperties.sort((a, b) => getDaysOverdue(b) - getDaysOverdue(a));
+
+        grid.innerHTML = pendingProperties.map(property => {
+            const daysOverdue = getDaysOverdue(property);
+            const isOverdue = daysOverdue > 0;
+
+            return `
+                <div class="property-card rent-pending">
+                    <span class="property-status status-${property.status.toLowerCase()}">${property.status}</span>
+                    <span class="rent-pending-badge">${isOverdue ? `${daysOverdue} days overdue` : 'Due Soon'}</span>
+                    <h3>${property.address}</h3>
+                    <div class="rent-info ${isOverdue ? 'overdue' : ''}">
+                        <p style="margin: 0; font-weight: 600; color: ${isOverdue ? '#ef4444' : '#3b82f6'};">
+                            ${isOverdue ? '⚠️ Overdue' : '⏰ Due'}: $${parseFloat(property.rentAmount).toLocaleString()}
+                        </p>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #666;">
+                            Due on: ${property.rentDueDay}${getOrdinalSuffix(property.rentDueDay)} of each month
+                        </p>
+                        ${property.lastPaidDate ? `
+                            <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #666;">
+                                Last paid: ${new Date(property.lastPaidDate).toLocaleDateString()}
+                            </p>
+                        ` : ''}
+                    </div>
+                    <div class="property-details">
+                        <p><strong>Tenant:</strong> ${property.tenantName || 'N/A'}</p>
+                        ${property.tenantEmail ? `<p><strong>Email:</strong> ${property.tenantEmail}</p>` : ''}
+                        ${property.tenantPhone ? `<p><strong>Phone:</strong> ${property.tenantPhone}</p>` : ''}
+                        <p><strong>Type:</strong> ${property.type}</p>
+                    </div>
+                    <div class="property-actions">
+                        <button class="btn-small btn-paid" onclick="openPaymentModal(${property.id})">Mark as Paid</button>
+                        <button class="btn-small btn-edit" onclick="editProperty(${property.id})">Edit</button>
+                    </div>
+                </div>
+            `}).join('');
+    }
+
+    // Display maintenance requests
+    function displayMaintenanceRequests(requests) {
+        const grid = document.getElementById('maintenanceGrid');
+
+        if (requests.length === 0) {
+            grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <h3>No Maintenance Requests</h3>
+                        <p>All systems operational!</p>
+                    </div>
+                `;
+            return;
+        }
+
+        grid.innerHTML = requests.map(request => {
+            const property = allProperties.find(p => p.id === request.propertyId);
+            const propertyAddress = property ? property.address : 'Unknown Property';
+            const statusClass = request.status.toLowerCase().replace(' ', '.');
+
+            return `
+                <div class="maintenance-card">
+                    <span class="property-status status-${statusClass}">${request.status}</span>
+                    <h3>${request.issue}</h3>
+                    <div style="margin: 10px 0;">
+                        <span class="priority-${request.priority.toLowerCase()}">${request.priority} Priority</span>
+                    </div>
+                    <div class="maintenance-details">
+                        <p><strong>Property:</strong> ${propertyAddress}</p>
+                        <p><strong>Tenant:</strong> ${request.tenantName}</p>
+                        ${request.tenantPhone ? `<p><strong>Phone:</strong> ${request.tenantPhone}</p>` : ''}
+                        <p><strong>Category:</strong> ${request.category}</p>
+                        <p><strong>Reported:</strong> ${new Date(request.reportedDate).toLocaleDateString()}</p>
+                        ${request.description ? `<p style="margin-top: 10px; color: #666;">${request.description}</p>` : ''}
+                        ${request.status === 'Resolved' && request.resolvedDate ? `
+                            <p style="margin-top: 10px;"><strong>Resolved:</strong> ${new Date(request.resolvedDate).toLocaleDateString()}</p>
+                            ${request.resolvedBy ? `<p><strong>Resolved By:</strong> ${request.resolvedBy}</p>` : ''}
+                            ${request.resolutionNotes ? `<p style="color: #666;">${request.resolutionNotes}</p>` : ''}
+                        ` : ''}
+                    </div>
+                    <div class="maintenance-actions">
+                        ${request.status !== 'Resolved' && request.status !== 'Closed' ? `
+                            <button class="btn-small btn-resolve" onclick="openResolveModal(${request.id})">Resolve</button>
+                        ` : ''}
+                        <button class="btn-small btn-delete" onclick="deleteMaintenanceRequest(${request.id})">Delete</button>
+                    </div>
+                </div>
+            `}).join('');
+    }
+
+    // Filter maintenance requests
+    function filterMaintenance() {
+        const statusFilter = document.getElementById('maintenanceStatusFilter').value;
+        const priorityFilter = document.getElementById('maintenancePriorityFilter').value;
+
+        let filtered = allMaintenanceRequests;
+
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(r => r.status === statusFilter);
+        }
+
+        if (priorityFilter !== 'all') {
+            filtered = filtered.filter(r => r.priority === priorityFilter);
+        }
+
+        // Sort by priority and date
+        filtered.sort((a, b) => {
+            const priorityOrder = { 'Urgent': 0, 'High': 1, 'Medium': 2, 'Low': 3 };
+            if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                return priorityOrder[a.priority] - priorityOrder[b.priority];
+            }
+            return new Date(b.reportedDate) - new Date(a.reportedDate);
+        });
+
+        displayMaintenanceRequests(filtered);
+    }
+
+    // Get ordinal suffix for day
+    function getOrdinalSuffix(day) {
+        if (day > 3 && day < 21) return 'th';
+        switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    }
+
+    // Open payment modal
+    function openPaymentModal(id) {
+        document.getElementById('paymentPropertyId').value = id;
+        document.getElementById('paymentForm').reset();
+        document.getElementById('paymentDate').valueAsDate = new Date();
+        document.getElementById('paymentModal').style.display = 'block';
+    }
+
+    // Close payment modal
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+    }
+
+    // Submit payment
+    async function submitPayment(event) {
+        event.preventDefault();
+
+        const propertyId = document.getElementById('paymentPropertyId').value;
+        const property = allProperties.find(p => p.id == propertyId);
+
+        if (!property) return;
+
+        property.lastPaidDate = document.getElementById('paymentDate').value;
+        property.paymentMode = document.getElementById('paymentMode').value;
+        property.paymentNotes = document.getElementById('paymentNotes').value;
+
+        try {
+            const response = await fetch(`${API_URL}/${propertyId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(property)
+            });
+
+            if (response.ok) {
+                closePaymentModal();
+                loadProperties();
+            }
+        } catch (error) {
+            console.error('Error updating property:', error);
+            alert('Error recording payment. Please try again.');
+        }
+    }
+
+    // Open maintenance modal
+    function openMaintenanceModal() {
+        document.getElementById('maintenanceForm').reset();
+        document.getElementById('maintenanceId').value = '';
+        document.getElementById('maintenanceModalTitle').textContent = 'New Maintenance Request';
+        document.getElementById('maintenanceModal').style.display = 'block';
+    }
+
+    // Close maintenance modal
+    function closeMaintenanceModal() {
+        document.getElementById('maintenanceModal').style.display = 'none';
+    }
+
+    // Save maintenance request
+    async function saveMaintenanceRequest(event) {
+        event.preventDefault();
+
+        const requestId = document.getElementById('maintenanceId').value;
+        const request = {
+            propertyId: parseInt(document.getElementById('maintenanceProperty').value),
+            tenantName: document.getElementById('maintenanceTenant').value,
+            tenantPhone: document.getElementById('maintenanceTenantPhone').value,
+            category: document.getElementById('maintenanceCategory').value,
+            priority: document.getElementById('maintenancePriority').value,
+            issue: document.getElementById('maintenanceIssue').value,
+            description: document.getElementById('maintenanceDescription').value
+        };
+
+        try {
+            const url = requestId ? `${MAINTENANCE_API_URL}/${requestId}` : MAINTENANCE_API_URL;
+            const method = requestId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(request)
+            });
+
+            if (response.ok) {
+                closeMaintenanceModal();
+                loadMaintenanceRequests();
+            }
+        } catch (error) {
+            console.error('Error saving maintenance request:', error);
+            alert('Error saving maintenance request. Please try again.');
+        }
+    }
+
+    // Open resolve modal
+    function openResolveModal(id) {
+        document.getElementById('resolveRequestId').value = id;
+        document.getElementById('resolveForm').reset();
+        document.getElementById('resolveModal').style.display = 'block';
+    }
+
+    // Close resolve modal
+    function closeResolveModal() {
+        document.getElementById('resolveModal').style.display = 'none';
+    }
+
+    // Submit resolution
+    async function submitResolution(event) {
+        event.preventDefault();
+
+        const requestId = document.getElementById('resolveRequestId').value;
+        const resolvedBy = document.getElementById('resolvedBy').value;
+        const notes = document.getElementById('resolutionNotes').value;
+
+        try {
+            const response = await fetch(`${MAINTENANCE_API_URL}/${requestId}/resolve?resolvedBy=${encodeURIComponent(resolvedBy)}&notes=${encodeURIComponent(notes)}`, {
+                method: 'PUT'
+            });
+
+            if (response.ok) {
+                closeResolveModal();
+                loadMaintenanceRequests();
+            }
+        } catch (error) {
+            console.error('Error resolving maintenance request:', error);
+            alert('Error resolving request. Please try again.');
+        }
+    }
+
+    // Delete maintenance request
+    async function deleteMaintenanceRequest(id) {
+        if (!confirm('Are you sure you want to delete this maintenance request?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${MAINTENANCE_API_URL}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                loadMaintenanceRequests();
+            }
+        } catch (error) {
+            console.error('Error deleting maintenance request:', error);
+            alert('Error deleting request. Please try again.');
+        }
+    }
+
+    // Filter properties
+    function filterProperties() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const typeFilter = document.getElementById('typeFilter').value;
+
+        let filtered = allProperties;
+
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(p => p.status === statusFilter);
+        }
+
+        if (typeFilter !== 'all') {
+            filtered = filtered.filter(p => p.type === typeFilter);
+        }
+
+        displayProperties(filtered);
+    }
+
+    // Open property modal
+    function openModal(property = null) {
+        const modal = document.getElementById('propertyModal');
+        const form = document.getElementById('propertyForm');
+
+        form.reset();
+
+        if (property) {
+            document.getElementById('modalTitle').textContent = 'Edit Property';
+            document.getElementById('propertyId').value = property.id;
+            document.getElementById('address').value = property.address;
+            document.getElementById('type').value = property.type;
+            document.getElementById('status').value = property.status;
+            document.getElementById('bedrooms').value = property.bedrooms;
+            document.getElementById('bathrooms').value = property.bathrooms;
+            document.getElementById('rentAmount').value = property.rentAmount;
+            document.getElementById('tenantName').value = property.tenantName || '';
+            document.getElementById('tenantEmail').value = property.tenantEmail || '';
+            document.getElementById('tenantPhone').value = property.tenantPhone || '';
+            document.getElementById('rentDueDay').value = property.rentDueDay || '';
+            document.getElementById('lastPaidDate').value = property.lastPaidDate || '';
+            document.getElementById('description').value = property.description || '';
+        } else {
+            document.getElementById('modalTitle').textContent = 'Add New Property';
+            document.getElementById('propertyId').value = '';
+        }
+
+        toggleTenantFields();
+        modal.style.display = 'block';
+    }
+
+    // Close property modal
+    function closeModal() {
+        document.getElementById('propertyModal').style.display = 'none';
+    }
+
+    // Toggle tenant fields based on status
+    function toggleTenantFields() {
+        const status = document.getElementById('status').value;
+        const tenantFields = document.getElementById('tenantFields');
+        tenantFields.style.display = status === 'Rented' ? 'block' : 'none';
+    }
+
+    // Save property
+    async function saveProperty(event) {
+        event.preventDefault();
+
+        const propertyId = document.getElementById('propertyId').value;
+        const property = {
+            address: document.getElementById('address').value,
+            type: document.getElementById('type').value,
+            status: document.getElementById('status').value,
+            bedrooms: parseInt(document.getElementById('bedrooms').value),
+            bathrooms: parseInt(document.getElementById('bathrooms').value),
+            rentAmount: parseFloat(document.getElementById('rentAmount').value),
+            tenantName: document.getElementById('tenantName').value,
+            tenantEmail: document.getElementById('tenantEmail').value,
+            tenantPhone: document.getElementById('tenantPhone').value,
+            rentDueDay: document.getElementById('rentDueDay').value ? parseInt(document.getElementById('rentDueDay').value) : null,
+            lastPaidDate: document.getElementById('lastPaidDate').value || null,
+            description: document.getElementById('description').value
+        };
+
+        try {
+            const url = propertyId ? `${API_URL}/${propertyId}` : API_URL;
+            const method = propertyId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(property)
+            });
+
+            if (response.ok) {
+                closeModal();
+                loadProperties();
+            }
+        } catch (error) {
+            console.error('Error saving property:', error);
+            alert('Error saving property. Please try again.');
+        }
+    }
+
+    // Edit property
+    function editProperty(id) {
+        const property = allProperties.find(p => p.id === id);
+        if (property) {
+            openModal(property);
+        }
+    }
+
+    // Delete property
+    async function deleteProperty(id) {
+        if (!confirm('Are you sure you want to delete this property?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                loadProperties();
+            }
+        } catch (error) {
+            console.error('Error deleting property:', error);
+            alert('Error deleting property. Please try again.');
+        }
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const propertyModal = document.getElementById('propertyModal');
+        const paymentModal = document.getElementById('paymentModal');
+        const maintenanceModal = document.getElementById('maintenanceModal');
+        const resolveModal = document.getElementById('resolveModal');
+
+        if (event.target === propertyModal) {
+            closeModal();
+        }
+        if (event.target === paymentModal) {
+            closePaymentModal();
+        }
+        if (event.target === maintenanceModal) {
+            closeMaintenanceModal();
+        }
+        if (event.target === resolveModal) {
+            closeResolveModal();
+        }
+    };
+</script>
+</body>
+</html>

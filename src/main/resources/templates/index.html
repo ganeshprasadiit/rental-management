@@ -1295,25 +1295,64 @@
         const today = new Date();
         const lastPaid = property.lastPaidDate ? new Date(property.lastPaidDate) : null;
 
-        const lastDueDate = new Date(today.getFullYear(), today.getMonth(), property.rentDueDay);
-        if (lastDueDate > today) {
-            lastDueDate.setMonth(lastDueDate.getMonth() - 1);
+        // If no payment recorded at all, rent is pending
+        if (!lastPaid) {
+            return true;
         }
 
-        return !lastPaid || lastPaid < lastDueDate;
+        // Calculate the due date for the month AFTER the last payment
+        const lastPaidMonth = lastPaid.getMonth();
+        const lastPaidYear = lastPaid.getFullYear();
+
+        // The next due date after payment
+        let nextDueDateAfterPayment = new Date(lastPaidYear, lastPaidMonth + 1, property.rentDueDay);
+
+        // If they paid after the due day in that month, the next due is actually 2 months later
+        if (lastPaid.getDate() > property.rentDueDay) {
+            nextDueDateAfterPayment = new Date(lastPaidYear, lastPaidMonth + 2, property.rentDueDay);
+        }
+
+        // If the next due date has passed, rent is pending
+        return today >= nextDueDateAfterPayment;
     }
 
     function getDaysOverdue(property) {
         if (!property.rentDueDay) return 0;
 
         const today = new Date();
-        const lastDueDate = new Date(today.getFullYear(), today.getMonth(), property.rentDueDay);
-        if (lastDueDate > today) {
-            lastDueDate.setMonth(lastDueDate.getMonth() - 1);
+        const lastPaid = property.lastPaidDate ? new Date(property.lastPaidDate) : null;
+
+        // Calculate the current month's due date
+        let currentDueDate = new Date(today.getFullYear(), today.getMonth(), property.rentDueDay);
+
+        // If due date hasn't arrived yet this month, use last month's due date
+        if (currentDueDate > today) {
+            currentDueDate = new Date(today.getFullYear(), today.getMonth() - 1, property.rentDueDay);
         }
 
-        const diffTime = today - lastDueDate;
+        // If no payment recorded, calculate from the current due date
+        if (!lastPaid) {
+            const diffTime = today - currentDueDate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays > 0 ? diffDays : 0;
+        }
+
+        // Calculate the due date for the month AFTER the last payment
+        const lastPaidMonth = lastPaid.getMonth();
+        const lastPaidYear = lastPaid.getFullYear();
+
+        // The next due date after payment (next month)
+        let nextDueDateAfterPayment = new Date(lastPaidYear, lastPaidMonth + 1, property.rentDueDay);
+
+        // If they paid after the due day in that month, the next due is actually 2 months later
+        if (lastPaid.getDate() > property.rentDueDay) {
+            nextDueDateAfterPayment = new Date(lastPaidYear, lastPaidMonth + 2, property.rentDueDay);
+        }
+
+        // Calculate days overdue from the next due date after payment
+        const diffTime = today - nextDueDateAfterPayment;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
         return diffDays > 0 ? diffDays : 0;
     }
 

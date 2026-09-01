@@ -986,7 +986,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Monthly Rent ($) *</label>
+                    <label class="form-label">Monthly Rent (£) *</label>
                     <input type="number" id="rentAmount" class="form-input" step="0.01" min="0" required>
                 </div>
 
@@ -1024,6 +1024,128 @@
                         <label class="form-label">Last Paid</label>
                         <input type="date" id="lastPaidDate" class="form-input">
                     </div>
+                </div>
+
+                <div class="form-section-title">Utilities &amp; Bills</div>
+
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px;">Electricity</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Provider</label>
+                        <input type="text" id="electricityProvider" class="form-input" placeholder="e.g. Octopus Energy">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Cost (£)</label>
+                        <input type="number" id="electricityCost" class="form-input" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Paid By</label>
+                    <select id="electricityPaidBy" class="form-select">
+                        <option value="">Not set</option>
+                        <option value="Landlord">Landlord</option>
+                        <option value="Tenant">Tenant</option>
+                    </select>
+                </div>
+
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px;">Gas</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Provider</label>
+                        <input type="text" id="gasProvider" class="form-input" placeholder="e.g. British Gas">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Cost (£)</label>
+                        <input type="number" id="gasCost" class="form-input" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Paid By</label>
+                    <select id="gasPaidBy" class="form-select">
+                        <option value="">Not set</option>
+                        <option value="Landlord">Landlord</option>
+                        <option value="Tenant">Tenant</option>
+                    </select>
+                </div>
+
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px;">Water</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Provider</label>
+                        <input type="text" id="waterProvider" class="form-input" placeholder="e.g. Thames Water">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Cost (£)</label>
+                        <input type="number" id="waterCost" class="form-input" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Paid By</label>
+                    <select id="waterPaidBy" class="form-select">
+                        <option value="">Not set</option>
+                        <option value="Landlord">Landlord</option>
+                        <option value="Tenant">Tenant</option>
+                    </select>
+                </div>
+
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px;">Internet</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Provider</label>
+                        <input type="text" id="internetProvider" class="form-input" placeholder="e.g. BT, Virgin Media">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Cost (£)</label>
+                        <input type="number" id="internetCost" class="form-input" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Paid By</label>
+                    <select id="internetPaidBy" class="form-select">
+                        <option value="">Not set</option>
+                        <option value="Landlord">Landlord</option>
+                        <option value="Tenant">Tenant</option>
+                    </select>
+                </div>
+
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px;">Council Tax</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Council / Band</label>
+                        <input type="text" id="councilTaxProvider" class="form-input" placeholder="e.g. Band D">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Cost (£)</label>
+                        <input type="number" id="councilTaxCost" class="form-input" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Paid By</label>
+                    <select id="councilTaxPaidBy" class="form-select">
+                        <option value="">Not set</option>
+                        <option value="Landlord">Landlord</option>
+                        <option value="Tenant">Tenant</option>
+                    </select>
+                </div>
+
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px;">TV License</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Provider</label>
+                        <input type="text" id="tvLicenseProvider" class="form-input" placeholder="e.g. TV Licensing">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Cost (£)</label>
+                        <input type="number" id="tvLicenseCost" class="form-input" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Paid By</label>
+                    <select id="tvLicensePaidBy" class="form-select">
+                        <option value="">Not set</option>
+                        <option value="Landlord">Landlord</option>
+                        <option value="Tenant">Tenant</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -1806,6 +1928,24 @@
             document.getElementById('tenantMoveInDate').value = property.tenantMoveInDate || '';
             document.getElementById('rentDueDay').value = property.rentDueDay || '';
             document.getElementById('lastPaidDate').value = property.lastPaidDate || '';
+            document.getElementById('electricityProvider').value = property.electricityProvider || '';
+            document.getElementById('electricityCost').value = property.electricityCost || '';
+            document.getElementById('electricityPaidBy').value = property.electricityPaidBy || '';
+            document.getElementById('gasProvider').value = property.gasProvider || '';
+            document.getElementById('gasCost').value = property.gasCost || '';
+            document.getElementById('gasPaidBy').value = property.gasPaidBy || '';
+            document.getElementById('waterProvider').value = property.waterProvider || '';
+            document.getElementById('waterCost').value = property.waterCost || '';
+            document.getElementById('waterPaidBy').value = property.waterPaidBy || '';
+            document.getElementById('internetProvider').value = property.internetProvider || '';
+            document.getElementById('internetCost').value = property.internetCost || '';
+            document.getElementById('internetPaidBy').value = property.internetPaidBy || '';
+            document.getElementById('councilTaxProvider').value = property.councilTaxProvider || '';
+            document.getElementById('councilTaxCost').value = property.councilTaxCost || '';
+            document.getElementById('councilTaxPaidBy').value = property.councilTaxPaidBy || '';
+            document.getElementById('tvLicenseProvider').value = property.tvLicenseProvider || '';
+            document.getElementById('tvLicenseCost').value = property.tvLicenseCost || '';
+            document.getElementById('tvLicensePaidBy').value = property.tvLicensePaidBy || '';
             document.getElementById('description').value = property.description || '';
         } else {
             document.getElementById('modalTitle').textContent = 'Add Property';
@@ -1841,6 +1981,24 @@
             tenantMoveInDate: document.getElementById('tenantMoveInDate').value || null,
             rentDueDay: document.getElementById('rentDueDay').value ? parseInt(document.getElementById('rentDueDay').value) : null,
             lastPaidDate: document.getElementById('lastPaidDate').value || null,
+            electricityProvider: document.getElementById('electricityProvider').value || null,
+            electricityCost: document.getElementById('electricityCost').value ? parseFloat(document.getElementById('electricityCost').value) : null,
+            electricityPaidBy: document.getElementById('electricityPaidBy').value || null,
+            gasProvider: document.getElementById('gasProvider').value || null,
+            gasCost: document.getElementById('gasCost').value ? parseFloat(document.getElementById('gasCost').value) : null,
+            gasPaidBy: document.getElementById('gasPaidBy').value || null,
+            waterProvider: document.getElementById('waterProvider').value || null,
+            waterCost: document.getElementById('waterCost').value ? parseFloat(document.getElementById('waterCost').value) : null,
+            waterPaidBy: document.getElementById('waterPaidBy').value || null,
+            internetProvider: document.getElementById('internetProvider').value || null,
+            internetCost: document.getElementById('internetCost').value ? parseFloat(document.getElementById('internetCost').value) : null,
+            internetPaidBy: document.getElementById('internetPaidBy').value || null,
+            councilTaxProvider: document.getElementById('councilTaxProvider').value || null,
+            councilTaxCost: document.getElementById('councilTaxCost').value ? parseFloat(document.getElementById('councilTaxCost').value) : null,
+            councilTaxPaidBy: document.getElementById('councilTaxPaidBy').value || null,
+            tvLicenseProvider: document.getElementById('tvLicenseProvider').value || null,
+            tvLicenseCost: document.getElementById('tvLicenseCost').value ? parseFloat(document.getElementById('tvLicenseCost').value) : null,
+            tvLicensePaidBy: document.getElementById('tvLicensePaidBy').value || null,
             description: document.getElementById('description').value
         };
 
@@ -1878,6 +2036,31 @@
             case 3: return 'rd';
             default: return 'th';
         }
+    }
+
+    function buildUtilitiesHtml(property) {
+        const utilities = [
+            { label: 'Electricity', icon: 'bolt', provider: property.electricityProvider, cost: property.electricityCost, paidBy: property.electricityPaidBy },
+            { label: 'Gas', icon: 'fire', provider: property.gasProvider, cost: property.gasCost, paidBy: property.gasPaidBy },
+            { label: 'Water', icon: 'tint', provider: property.waterProvider, cost: property.waterCost, paidBy: property.waterPaidBy },
+            { label: 'Internet', icon: 'wifi', provider: property.internetProvider, cost: property.internetCost, paidBy: property.internetPaidBy },
+            { label: 'Council Tax', icon: 'landmark', provider: property.councilTaxProvider, cost: property.councilTaxCost, paidBy: property.councilTaxPaidBy },
+            { label: 'TV License', icon: 'tv', provider: property.tvLicenseProvider, cost: property.tvLicenseCost, paidBy: property.tvLicensePaidBy }
+        ];
+
+        const populated = utilities.filter(u => u.provider || u.cost || u.paidBy);
+        if (populated.length === 0) return '';
+
+        return populated.map(u => `
+            <div class="tenant-info" style="margin-bottom: 10px;">
+                <div class="tenant-name" style="font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-${u.icon}" style="color: var(--primary-color); width: 16px;"></i> ${u.label}
+                </div>
+                ${u.provider ? `<div class="tenant-contact" style="margin-bottom: 2px;">${u.provider}</div>` : ''}
+                ${u.cost ? `<div class="tenant-contact" style="margin-bottom: 2px;">£${parseFloat(u.cost).toLocaleString()}/mo</div>` : ''}
+                ${u.paidBy ? `<div class="tenant-contact">Paid by: ${u.paidBy}</div>` : ''}
+            </div>
+        `).join('');
     }
 
     function viewPropertyDetails(id) {
@@ -1939,6 +2122,12 @@
         html += `<button class="btn btn-outline" style="width: 100%; margin-top: 20px;" onclick="viewTenantHistory(${property.id})">
             <i class="fas fa-history"></i> View Previous Tenants
         </button>`;
+
+        const utilitiesHtml = buildUtilitiesHtml(property);
+        if (utilitiesHtml) {
+            html += `<div class="form-section-title">Utilities &amp; Bills</div>`;
+            html += utilitiesHtml;
+        }
 
         html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
             <button class="btn btn-primary" onclick="closeDetailsModal(); editProperty(${property.id});">

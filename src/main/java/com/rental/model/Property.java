@@ -45,6 +45,37 @@ public class Property {
     private String paymentNotes;
     private String tenantMoveInDate;
 
+    // Utilities - UK common: Electricity, Gas, Water, Internet, Council Tax, TV License
+    private String electricityProvider;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal electricityCost;
+    private String electricityPaidBy;
+
+    private String gasProvider;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal gasCost;
+    private String gasPaidBy;
+
+    private String waterProvider;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal waterCost;
+    private String waterPaidBy;
+
+    private String internetProvider;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal internetCost;
+    private String internetPaidBy;
+
+    private String councilTaxProvider;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal councilTaxCost;
+    private String councilTaxPaidBy;
+
+    private String tvLicenseProvider;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal tvLicenseCost;
+    private String tvLicensePaidBy;
+
 
 
     // Constructors
@@ -188,5 +219,151 @@ public class Property {
 
     public void setTenantMoveInDate(String tenantMoveInDate) {
         this.tenantMoveInDate = tenantMoveInDate;
+    }
+
+    // Utilities getters and setters
+
+    public String getElectricityProvider() {
+        return electricityProvider;
+    }
+
+    public void setElectricityProvider(String electricityProvider) {
+        this.electricityProvider = electricityProvider;
+    }
+
+    public BigDecimal getElectricityCost() {
+        return electricityCost;
+    }
+
+    public void setElectricityCost(BigDecimal electricityCost) {
+        this.electricityCost = electricityCost;
+    }
+
+    public String getElectricityPaidBy() {
+        return electricityPaidBy;
+    }
+
+    public void setElectricityPaidBy(String electricityPaidBy) {
+        this.electricityPaidBy = electricityPaidBy;
+    }
+
+    public String getGasProvider() {
+        return gasProvider;
+    }
+
+    public void setGasProvider(String gasProvider) {
+        this.gasProvider = gasProvider;
+    }
+
+    public BigDecimal getGasCost() {
+        return gasCost;
+    }
+
+    public void setGasCost(BigDecimal gasCost) {
+        this.gasCost = gasCost;
+    }
+
+    public String getGasPaidBy() {
+        return gasPaidBy;
+    }
+
+    public void setGasPaidBy(String gasPaidBy) {
+        this.gasPaidBy = gasPaidBy;
+    }
+
+    public String getWaterProvider() {
+        return waterProvider;
+    }
+
+    public void setWaterProvider(String waterProvider) {
+        this.waterProvider = waterProvider;
+    }
+
+    public BigDecimal getWaterCost() {
+        return waterCost;
+    }
+
+    public void setWaterCost(BigDecimal waterCost) {
+        this.waterCost = waterCost;
+    }
+
+    public String getWaterPaidBy() {
+        return waterPaidBy;
+    }
+
+    public void setWaterPaidBy(String waterPaidBy) {
+        this.waterPaidBy = waterPaidBy;
+    }
+
+    public String getInternetProvider() {
+        return internetProvider;
+    }
+
+    public void setInternetProvider(String internetProvider) {
+        this.internetProvider = internetProvider;
+    }
+
+    public BigDecimal getInternetCost() {
+        return internetCost;
+    }
+
+    public void setInternetCost(BigDecimal internetCost) {
+        this.internetCost = internetCost;
+    }
+
+    public String getInternetPaidBy() {
+        return internetPaidBy;
+    }
+
+    public void setInternetPaidBy(String internetPaidBy) {
+        this.internetPaidBy = internetPaidBy;
+    }
+
+    public String getCouncilTaxProvider() {
+        return councilTaxProvider;
+    }
+
+    public void setCouncilTaxProvider(String councilTaxProvider) {
+        this.councilTaxProvider = councilTaxProvider;
+    }
+
+    public BigDecimal getCouncilTaxCost() {
+        return councilTaxCost;
+    }
+
+    public void setCouncilTaxCost(BigDecimal councilTaxCost) {
+        this.councilTaxCost = councilTaxCost;
+    }
+
+    public String getCouncilTaxPaidBy() {
+        return councilTaxPaidBy;
+    }
+
+    public void setCouncilTaxPaidBy(String councilTaxPaidBy) {
+        this.councilTaxPaidBy = councilTaxPaidBy;
+    }
+
+    public String getTvLicenseProvider() {
+        return tvLicenseProvider;
+    }
+
+    public void setTvLicenseProvider(String tvLicenseProvider) {
+        this.tvLicenseProvider = tvLicenseProvider;
+    }
+
+    public BigDecimal getTvLicenseCost() {
+        return tvLicenseCost;
+    }
+
+    public void setTvLicenseCost(BigDecimal tvLicenseCost) {
+        this.tvLicenseCost = tvLicenseCost;
+    }
+
+    public String getTvLicensePaidBy() {
+        return tvLicensePaidBy;
+    }
+
+    public void setTvLicensePaidBy(String tvLicensePaidBy) {
+        this.tvLicensePaidBy = tvLicensePaidBy;
     }
 }

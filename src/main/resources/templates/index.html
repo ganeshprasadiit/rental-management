@@ -321,6 +321,22 @@
             padding: 16px;
         }
 
+        .property-clickable {
+            cursor: pointer;
+        }
+
+        .property-clickable:active {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .property-body-top {
+            padding: 16px 16px 0;
+        }
+
+        .property-actions-wrap {
+            padding: 0 16px 16px;
+        }
+
         .property-details {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -994,14 +1010,19 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Due Day</label>
-                            <input type="number" id="rentDueDay" class="form-input" min="1" max="31" placeholder="1-31">
+                            <label class="form-label">Move-in Date</label>
+                            <input type="date" id="tenantMoveInDate" class="form-input">
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Last Paid</label>
-                            <input type="date" id="lastPaidDate" class="form-input">
+                            <label class="form-label">Due Day</label>
+                            <input type="number" id="rentDueDay" class="form-input" min="1" max="31" placeholder="1-31">
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Last Paid</label>
+                        <input type="date" id="lastPaidDate" class="form-input">
                     </div>
                 </div>
 
@@ -1161,6 +1182,34 @@
                     <i class="fas fa-check-circle"></i> Mark as Resolved
                 </button>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Property Details Modal -->
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="detailsModalTitle">Property Details</h2>
+            <button class="modal-close" onclick="closeDetailsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="detailsModalBody">
+        </div>
+    </div>
+</div>
+
+<!-- Tenant History Modal -->
+<div id="historyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Previous Tenants</h2>
+            <button class="modal-close" onclick="closeHistoryModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="historyModalBody">
         </div>
     </div>
 </div>
@@ -1452,35 +1501,39 @@
 
             return `
                 <div class="property-card ${rentPending ? 'rent-pending' : ''}">
-                    <div class="property-header">
-                        <div class="property-address">${property.address}</div>
-                        <div class="property-meta">
-                            <span><i class="fas fa-${property.type === 'House' ? 'home' : property.type === 'Apartment' ? 'building' : 'door-open'}"></i> ${property.type}</span>
+                    <div class="property-clickable" onclick="viewPropertyDetails(${property.id})">
+                        <div class="property-header">
+                            <div class="property-address">${property.address}</div>
+                            <div class="property-meta">
+                                <span><i class="fas fa-${property.type === 'House' ? 'home' : property.type === 'Apartment' ? 'building' : 'door-open'}"></i> ${property.type}</span>
+                            </div>
+                            <span class="status-badge status-${property.status.toLowerCase()}">${property.status}</span>
+                            ${rentPending ? `<span class="rent-alert">${daysOverdue > 0 ? daysOverdue + 'd' : 'DUE'}</span>` : ''}
                         </div>
-                        <span class="status-badge status-${property.status.toLowerCase()}">${property.status}</span>
-                        ${rentPending ? `<span class="rent-alert">${daysOverdue > 0 ? daysOverdue + 'd' : 'DUE'}</span>` : ''}
+                        <div class="property-body-top">
+                            <div class="property-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-bed detail-icon"></i>
+                                    <span class="detail-value">${property.bedrooms} BR</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-bath detail-icon"></i>
+                                    <span class="detail-value">${property.bathrooms} BA</span>
+                                </div>
+                                <div class="detail-item" style="grid-column: 1/-1;">
+                                    <i class="fas fa-dollar-sign detail-icon"></i>
+                                    <span class="detail-value">$${parseFloat(property.rentAmount).toLocaleString()}/mo</span>
+                                </div>
+                            </div>
+                            ${property.status === 'Rented' && property.tenantName ? `
+                                <div class="tenant-info">
+                                    <div class="tenant-name">${property.tenantName}</div>
+                                    ${property.tenantPhone ? `<div class="tenant-contact"><i class="fas fa-phone"></i> ${property.tenantPhone}</div>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
-                    <div class="property-body">
-                        <div class="property-details">
-                            <div class="detail-item">
-                                <i class="fas fa-bed detail-icon"></i>
-                                <span class="detail-value">${property.bedrooms} BR</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-bath detail-icon"></i>
-                                <span class="detail-value">${property.bathrooms} BA</span>
-                            </div>
-                            <div class="detail-item" style="grid-column: 1/-1;">
-                                <i class="fas fa-dollar-sign detail-icon"></i>
-                                <span class="detail-value">$${parseFloat(property.rentAmount).toLocaleString()}/mo</span>
-                            </div>
-                        </div>
-                        ${property.status === 'Rented' && property.tenantName ? `
-                            <div class="tenant-info">
-                                <div class="tenant-name">${property.tenantName}</div>
-                                ${property.tenantPhone ? `<div class="tenant-contact"><i class="fas fa-phone"></i> ${property.tenantPhone}</div>` : ''}
-                            </div>
-                        ` : ''}
+                    <div class="property-actions-wrap">
                         <div class="property-actions ${rentPending ? 'three-col' : ''}">
                             <button class="btn btn-primary" onclick="editProperty(${property.id})">
                                 <i class="fas fa-edit"></i> Edit
@@ -1750,6 +1803,7 @@
             document.getElementById('tenantName').value = property.tenantName || '';
             document.getElementById('tenantEmail').value = property.tenantEmail || '';
             document.getElementById('tenantPhone').value = property.tenantPhone || '';
+            document.getElementById('tenantMoveInDate').value = property.tenantMoveInDate || '';
             document.getElementById('rentDueDay').value = property.rentDueDay || '';
             document.getElementById('lastPaidDate').value = property.lastPaidDate || '';
             document.getElementById('description').value = property.description || '';
@@ -1784,6 +1838,7 @@
             tenantName: document.getElementById('tenantName').value,
             tenantEmail: document.getElementById('tenantEmail').value,
             tenantPhone: document.getElementById('tenantPhone').value,
+            tenantMoveInDate: document.getElementById('tenantMoveInDate').value || null,
             rentDueDay: document.getElementById('rentDueDay').value ? parseInt(document.getElementById('rentDueDay').value) : null,
             lastPaidDate: document.getElementById('lastPaidDate').value || null,
             description: document.getElementById('description').value
@@ -1813,6 +1868,144 @@
         if (property) {
             openModal(property);
         }
+    }
+
+    function getOrdinalSuffix(day) {
+        if (day > 3 && day < 21) return 'th';
+        switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    }
+
+    function viewPropertyDetails(id) {
+        const property = allProperties.find(p => p.id === id);
+        if (!property) return;
+
+        const rentPending = isRentPending(property);
+        const daysOverdue = getDaysOverdue(property);
+
+        document.getElementById('detailsModalTitle').textContent = property.address;
+
+        let html = '';
+
+        html += `<div style="margin-bottom: 16px;">
+            <span class="status-badge status-${property.status.toLowerCase()}" style="position: static; display: inline-block;">${property.status}</span>
+        </div>`;
+
+        html += `<div class="property-details" style="margin-bottom: 20px;">
+            <div class="detail-item">
+                <i class="fas fa-${property.type === 'House' ? 'home' : property.type === 'Apartment' ? 'building' : 'door-open'} detail-icon"></i>
+                <span class="detail-value">${property.type}</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-bed detail-icon"></i>
+                <span class="detail-value">${property.bedrooms} Bedrooms</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-bath detail-icon"></i>
+                <span class="detail-value">${property.bathrooms} Bathrooms</span>
+            </div>
+            <div class="detail-item">
+                <i class="fas fa-dollar-sign detail-icon"></i>
+                <span class="detail-value">$${parseFloat(property.rentAmount).toLocaleString()}/mo</span>
+            </div>
+        </div>`;
+
+        if (property.description) {
+            html += `<div style="margin-bottom: 20px; font-size: 13px; color: var(--text-secondary);">${property.description}</div>`;
+        }
+
+        html += `<div class="form-section-title">Current Tenant</div>`;
+
+        if (property.status === 'Rented' && property.tenantName) {
+            html += `<div class="tenant-info" style="margin-bottom: 0;">
+                <div class="tenant-name" style="font-size: 16px; margin-bottom: 8px;">${property.tenantName}</div>
+                ${property.tenantPhone ? `<div class="tenant-contact" style="margin-bottom: 4px;"><i class="fas fa-phone"></i> ${property.tenantPhone}</div>` : ''}
+                ${property.tenantEmail ? `<div class="tenant-contact" style="margin-bottom: 4px;"><i class="fas fa-envelope"></i> ${property.tenantEmail}</div>` : ''}
+                ${property.tenantMoveInDate ? `<div class="tenant-contact" style="margin-bottom: 4px;"><i class="fas fa-sign-in-alt"></i> Moved in ${new Date(property.tenantMoveInDate).toLocaleDateString()}</div>` : ''}
+                ${property.rentDueDay ? `<div class="tenant-contact" style="margin-bottom: 4px;"><i class="fas fa-calendar"></i> Rent due on ${property.rentDueDay}${getOrdinalSuffix(property.rentDueDay)} of each month</div>` : ''}
+                ${property.lastPaidDate ? `<div class="tenant-contact"><i class="fas fa-receipt"></i> Last paid ${new Date(property.lastPaidDate).toLocaleDateString()}${property.paymentMode ? ' via ' + property.paymentMode : ''}</div>` : ''}
+                ${rentPending ? `<div style="margin-top: 10px;"><span class="rent-alert" style="position: static; display: inline-block;">${daysOverdue > 0 ? daysOverdue + ' days overdue' : 'Due soon'}</span></div>` : ''}
+            </div>`;
+        } else {
+            html += `<div style="padding: 16px; background: var(--bg-color); border-radius: 12px; text-align: center; color: var(--text-secondary); font-size: 14px;">
+                No current tenant &mdash; property is ${property.status.toLowerCase()}
+            </div>`;
+        }
+
+        html += `<button class="btn btn-outline" style="width: 100%; margin-top: 20px;" onclick="viewTenantHistory(${property.id})">
+            <i class="fas fa-history"></i> View Previous Tenants
+        </button>`;
+
+        html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+            <button class="btn btn-primary" onclick="closeDetailsModal(); editProperty(${property.id});">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            ${rentPending ? `
+                <button class="btn btn-success" onclick="closeDetailsModal(); openPaymentModal(${property.id});">
+                    <i class="fas fa-check"></i> Record Payment
+                </button>
+            ` : `
+                <button class="btn btn-outline" onclick="closeDetailsModal(); deleteProperty(${property.id});">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            `}
+        </div>`;
+
+        document.getElementById('detailsModalBody').innerHTML = html;
+        document.getElementById('detailsModal').style.display = 'block';
+    }
+
+    function closeDetailsModal() {
+        document.getElementById('detailsModal').style.display = 'none';
+    }
+
+    async function viewTenantHistory(propertyId) {
+        const body = document.getElementById('historyModalBody');
+        body.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-secondary);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>`;
+        document.getElementById('historyModal').style.display = 'block';
+
+        try {
+            const response = await fetch(`${API_URL}/${propertyId}/tenant-history`);
+            const history = await response.json();
+
+            if (!history || history.length === 0) {
+                body.innerHTML = `
+                    <div class="empty-state" style="padding: 40px 20px;">
+                        <div class="empty-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="empty-title">No Previous Tenants</div>
+                        <div class="empty-text">This property has no tenant history yet</div>
+                    </div>
+                `;
+                return;
+            }
+
+            body.innerHTML = history.map(t => `
+                <div class="tenant-info" style="margin-bottom: 12px;">
+                    <div class="tenant-name" style="font-size: 15px;">${t.tenantName || 'Unknown Tenant'}</div>
+                    ${t.tenantPhone ? `<div class="tenant-contact" style="margin-bottom: 2px;"><i class="fas fa-phone"></i> ${t.tenantPhone}</div>` : ''}
+                    ${t.tenantEmail ? `<div class="tenant-contact" style="margin-bottom: 2px;"><i class="fas fa-envelope"></i> ${t.tenantEmail}</div>` : ''}
+                    <div class="tenant-contact" style="margin-top: 6px;">
+                        <i class="fas fa-calendar-alt"></i>
+                        ${t.moveInDate ? new Date(t.moveInDate).toLocaleDateString() : 'Unknown'}
+                        &rarr;
+                        ${t.moveOutDate ? new Date(t.moveOutDate).toLocaleDateString() : 'Unknown'}
+                    </div>
+                    ${t.rentAmount ? `<div class="tenant-contact"><i class="fas fa-dollar-sign"></i> $${parseFloat(t.rentAmount).toLocaleString()}/mo</div>` : ''}
+                </div>
+            `).join('');
+        } catch (error) {
+            body.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger-color);">Error loading tenant history</div>`;
+        }
+    }
+
+    function closeHistoryModal() {
+        document.getElementById('historyModal').style.display = 'none';
     }
 
     async function deleteProperty(id) {

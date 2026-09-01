@@ -43,6 +43,7 @@ public class Property {
     private String lastPaidDate;
     private String paymentMode;
     private String paymentNotes;
+    private String tenantMoveInDate;
 
 
 
@@ -179,5 +180,13 @@ public class Property {
 
     public void setPaymentNotes(String paymentNotes) {
         this.paymentNotes = paymentNotes;
+    }
+
+    public String getTenantMoveInDate() {
+        return tenantMoveInDate;
+    }
+
+    public void setTenantMoveInDate(String tenantMoveInDate) {
+        this.tenantMoveInDate = tenantMoveInDate;
     }
 }

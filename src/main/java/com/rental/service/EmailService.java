@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.util.List;
 
 @Service
 public class EmailService {
@@ -62,6 +63,114 @@ public class EmailService {
         } catch (MessagingException e) {
             System.err.println("Failed to send certificate expired alert: " + e.getMessage());
         }
+    }
+
+    public void sendRentPendingDailyReport(List<Property> pendingProperties) {
+        if (!canSend() || pendingProperties.isEmpty()) return;
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(landlordEmail);
+            helper.setSubject("Daily Rent Pending Report - " + java.time.LocalDate.now());
+            helper.setText(buildDailyReportHtml(pendingProperties), true);
+
+            mailSender.send(message);
+            System.out.println("Daily rent pending report sent to " + landlordEmail);
+        } catch (MessagingException e) {
+            System.err.println("Failed to send daily rent report: " + e.getMessage());
+        }
+    }
+
+    public void sendRentPendingNotification(Property property, int daysOverdue) {
+        if (!canSend()) return;
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(landlordEmail);
+            helper.setSubject("Rent Pending Alert - " + property.getAddress());
+            helper.setText(buildSinglePropertyReminderHtml(property, daysOverdue), true);
+
+            mailSender.send(message);
+            System.out.println("Rent pending notification sent for: " + property.getAddress());
+        } catch (MessagingException e) {
+            System.err.println("Failed to send rent notification: " + e.getMessage());
+        }
+    }
+
+    private String buildDailyReportHtml(List<Property> properties) {
+        double totalPending = properties.stream()
+                .mapToDouble(p -> p.getRentAmount() != null ? p.getRentAmount().doubleValue() : 0)
+                .sum();
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><style>");
+        html.append("body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }");
+        html.append(".container { max-width: 700px; margin: 0 auto; padding: 20px; }");
+        html.append(".header { background: #6366F1; color: white; padding: 24px; text-align: center; border-radius: 10px; margin-bottom: 24px; }");
+        html.append(".summary { background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; text-align: center; }");
+        html.append(".property-row { background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #F59E0B; }");
+        html.append(".property-row.overdue { border-left-color: #EF4444; }");
+        html.append(".label { font-weight: bold; }");
+        html.append(".footer { text-align: center; margin-top: 24px; color: #666; font-size: 13px; }");
+        html.append("</style></head><body>");
+        html.append("<div class='container'>");
+        html.append("<div class='header'><h2>\uD83C\uDFE0 Daily Rent Pending Report</h2><p>").append(java.time.LocalDate.now()).append("</p></div>");
+        html.append("<div class='summary'><strong>").append(properties.size()).append("</strong> propert").append(properties.size() == 1 ? "y" : "ies")
+                .append(" with pending rent &mdash; total owed: <strong>\u00A3").append(String.format("%.2f", totalPending)).append("</strong></div>");
+
+        for (Property p : properties) {
+            html.append("<div class='property-row overdue'>");
+            html.append("<div class='label'>").append(p.getAddress()).append("</div>");
+            html.append("<div>Tenant: ").append(p.getTenantName() != null ? p.getTenantName() : "N/A").append("</div>");
+            html.append("<div>Amount: \u00A3").append(p.getRentAmount() != null ? String.format("%.2f", p.getRentAmount()) : "N/A").append("</div>");
+            if (p.getTenantPhone() != null && !p.getTenantPhone().isBlank()) {
+                html.append("<div>Phone: ").append(p.getTenantPhone()).append("</div>");
+            }
+            html.append("</div>");
+        }
+
+        html.append("<div class='footer'>This is an automated message from your Property Management System</div>");
+        html.append("</div></body></html>");
+        return html.toString();
+    }
+
+    private String buildSinglePropertyReminderHtml(Property property, int daysOverdue) {
+        boolean overdue = daysOverdue > 0;
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><style>");
+        html.append("body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }");
+        html.append(".container { max-width: 600px; margin: 0 auto; padding: 20px; }");
+        html.append(".header { background: ").append(overdue ? "#EF4444" : "#F59E0B").append("; color: white; padding: 24px; text-align: center; border-radius: 10px; margin-bottom: 24px; }");
+        html.append(".content { background: #f8f9fa; padding: 24px; border-radius: 8px; }");
+        html.append(".row { padding: 6px 0; }");
+        html.append(".label { font-weight: bold; }");
+        html.append(".footer { text-align: center; margin-top: 24px; color: #666; font-size: 13px; }");
+        html.append("</style></head><body>");
+        html.append("<div class='container'>");
+        html.append("<div class='header'><h2>").append(overdue ? "\u26A0\uFE0F Rent Overdue" : "\u23F0 Rent Pending").append("</h2></div>");
+        html.append("<div class='content'>");
+        if (overdue) {
+            html.append("<p>Rent for this property is <strong>").append(daysOverdue).append(" day(s) overdue</strong>.</p>");
+        } else {
+            html.append("<p>Rent for this property is currently pending.</p>");
+        }
+        html.append("<div class='row'><span class='label'>Property:</span> ").append(property.getAddress()).append("</div>");
+        html.append("<div class='row'><span class='label'>Tenant:</span> ").append(property.getTenantName() != null ? property.getTenantName() : "N/A").append("</div>");
+        html.append("<div class='row'><span class='label'>Amount:</span> \u00A3").append(property.getRentAmount() != null ? String.format("%.2f", property.getRentAmount()) : "N/A").append("</div>");
+        if (property.getTenantPhone() != null && !property.getTenantPhone().isBlank()) {
+            html.append("<div class='row'><span class='label'>Phone:</span> ").append(property.getTenantPhone()).append("</div>");
+        }
+        html.append("</div>");
+        html.append("<div class='footer'>This is an automated message from your Property Management System</div>");
+        html.append("</div></body></html>");
+        return html.toString();
     }
 
     private boolean canSend() {

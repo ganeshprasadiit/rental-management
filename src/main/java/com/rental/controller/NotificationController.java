@@ -28,11 +28,19 @@ public class NotificationController {
         List<Property> pending = propertyService.getPendingRentProperties();
 
         Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
         response.put("count", pending.size());
 
-        if (!pending.isEmpty()) {
-            emailService.sendRentPendingDailyReport(pending);
+        if (pending.isEmpty()) {
+            response.put("success", true);
+            response.put("emailSent", false);
+            return ResponseEntity.ok(response);
+        }
+
+        boolean sent = emailService.sendRentPendingDailyReport(pending);
+        response.put("success", sent);
+        response.put("emailSent", sent);
+        if (!sent) {
+            response.put("message", "Could not send email - check landlord.email and mail credentials are configured correctly, and check server logs for details");
         }
 
         return ResponseEntity.ok(response);
@@ -51,9 +59,12 @@ public class NotificationController {
 
         Property property = propertyOpt.get();
         int daysOverdue = propertyService.getDaysOverdue(property);
-        emailService.sendRentPendingNotification(property, daysOverdue);
+        boolean sent = emailService.sendRentPendingNotification(property, daysOverdue);
 
-        response.put("success", true);
+        response.put("success", sent);
+        if (!sent) {
+            response.put("message", "Could not send email - check landlord.email and mail credentials are configured correctly, and check server logs for details");
+        }
         return ResponseEntity.ok(response);
     }
 }

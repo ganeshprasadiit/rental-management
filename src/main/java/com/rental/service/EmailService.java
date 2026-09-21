@@ -8,7 +8,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.util.List;
 
@@ -27,79 +26,94 @@ public class EmailService {
     @Value("${notification.enabled:true}")
     private boolean notificationsEnabled;
 
-    public void sendCertificateExpiryReminder(Property property, Certificate certificate, int daysUntilExpiry) {
-        if (!canSend()) return;
+    public boolean sendCertificateExpiryReminder(Property property, Certificate certificate, int daysUntilExpiry) {
+        if (!canSend()) return false;
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(fromEmail);
-            helper.setTo(landlordEmail);
+            helper.setTo(getLandlordEmails());
             helper.setSubject(certificate.getCertificateType() + " expiring soon - " + property.getAddress());
             helper.setText(buildExpiryHtml(property, certificate, daysUntilExpiry, false), true);
 
             mailSender.send(message);
             System.out.println("Certificate expiry reminder sent for: " + property.getAddress());
-        } catch (MessagingException e) {
+            return true;
+        } catch (Exception e) {
+            // mailSender.send() throws Spring's unchecked MailException (auth failures,
+            // connection issues) - not jakarta.mail.MessagingException - so this must
+            // catch Exception broadly or send failures crash the calling request.
             System.err.println("Failed to send certificate reminder: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 
-    public void sendCertificateExpiredAlert(Property property, Certificate certificate, int daysExpired) {
-        if (!canSend()) return;
+    public boolean sendCertificateExpiredAlert(Property property, Certificate certificate, int daysExpired) {
+        if (!canSend()) return false;
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(fromEmail);
-            helper.setTo(landlordEmail);
+            helper.setTo(getLandlordEmails());
             helper.setSubject(certificate.getCertificateType() + " EXPIRED - " + property.getAddress());
             helper.setText(buildExpiryHtml(property, certificate, daysExpired, true), true);
 
             mailSender.send(message);
             System.out.println("Certificate expired alert sent for: " + property.getAddress());
-        } catch (MessagingException e) {
+            return true;
+        } catch (Exception e) {
             System.err.println("Failed to send certificate expired alert: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 
-    public void sendRentPendingDailyReport(List<Property> pendingProperties) {
-        if (!canSend() || pendingProperties.isEmpty()) return;
+    public boolean sendRentPendingDailyReport(List<Property> pendingProperties) {
+        if (!canSend() || pendingProperties.isEmpty()) return false;
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(fromEmail);
-            helper.setTo(landlordEmail);
+            helper.setTo(getLandlordEmails());
             helper.setSubject("Daily Rent Pending Report - " + java.time.LocalDate.now());
             helper.setText(buildDailyReportHtml(pendingProperties), true);
 
             mailSender.send(message);
             System.out.println("Daily rent pending report sent to " + landlordEmail);
-        } catch (MessagingException e) {
+            return true;
+        } catch (Exception e) {
             System.err.println("Failed to send daily rent report: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 
-    public void sendRentPendingNotification(Property property, int daysOverdue) {
-        if (!canSend()) return;
+    public boolean sendRentPendingNotification(Property property, int daysOverdue) {
+        if (!canSend()) return false;
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(fromEmail);
-            helper.setTo(landlordEmail);
+            helper.setTo(getLandlordEmails());
             helper.setSubject("Rent Pending Alert - " + property.getAddress());
             helper.setText(buildSinglePropertyReminderHtml(property, daysOverdue), true);
 
             mailSender.send(message);
             System.out.println("Rent pending notification sent for: " + property.getAddress());
-        } catch (MessagingException e) {
+            return true;
+        } catch (Exception e) {
             System.err.println("Failed to send rent notification: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -211,5 +225,12 @@ public class EmailService {
         html.append("<div class='footer'>This is an automated message from your Property Management System</div>");
         html.append("</div></body></html>");
         return html.toString();
+    }
+
+    private String[] getLandlordEmails() {
+        return java.util.Arrays.stream(landlordEmail.split(","))
+                .map(String::trim)
+                .filter(email -> !email.isEmpty())
+                .toArray(String[]::new);
     }
 }

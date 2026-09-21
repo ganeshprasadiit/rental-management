@@ -1,120 +1,135 @@
 package com.rental.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rental.model.Certificate;
 import com.rental.model.Property;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import jakarta.mail.internet.MimeMessage;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * Sends email via the Resend HTTPS API (https://api.resend.com) rather than SMTP.
+ * Railway blocks outbound SMTP (ports 25/465/587/2525) on Free/Trial/Hobby plans, so
+ * a plain HTTPS POST is used instead - this works on any plan and any host.
+ */
 @Service
 public class EmailService {
 
     @Autowired
-    private JavaMailSender mailSender;
+    private ObjectMapper objectMapper;
 
     @Value("${landlord.email}")
     private String landlordEmail;
 
-    @Value("${spring.mail.username}")
-    private String fromEmail;
+    @Value("${resend.api.key:}")
+    private String resendApiKey;
+
+    @Value("${resend.from.email:onboarding@resend.dev}")
+    private String resendFromEmail;
+
+    @Value("${resend.from.name:Property Manager}")
+    private String resendFromName;
 
     @Value("${notification.enabled:true}")
     private boolean notificationsEnabled;
 
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
+
     public boolean sendCertificateExpiryReminder(Property property, Certificate certificate, int daysUntilExpiry) {
         if (!canSend()) return false;
 
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(getLandlordEmails());
-            helper.setSubject(certificate.getCertificateType() + " expiring soon - " + property.getAddress());
-            helper.setText(buildExpiryHtml(property, certificate, daysUntilExpiry, false), true);
-
-            mailSender.send(message);
-            System.out.println("Certificate expiry reminder sent for: " + property.getAddress());
-            return true;
-        } catch (Exception e) {
-            // mailSender.send() throws Spring's unchecked MailException (auth failures,
-            // connection issues) - not jakarta.mail.MessagingException - so this must
-            // catch Exception broadly or send failures crash the calling request.
-            System.err.println("Failed to send certificate reminder: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
+        String subject = certificate.getCertificateType() + " expiring soon - " + property.getAddress();
+        String html = buildExpiryHtml(property, certificate, daysUntilExpiry, false);
+        boolean sent = sendViaResend(getLandlordEmails(), subject, html);
+        if (sent) System.out.println("Certificate expiry reminder sent for: " + property.getAddress());
+        return sent;
     }
 
     public boolean sendCertificateExpiredAlert(Property property, Certificate certificate, int daysExpired) {
         if (!canSend()) return false;
 
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(getLandlordEmails());
-            helper.setSubject(certificate.getCertificateType() + " EXPIRED - " + property.getAddress());
-            helper.setText(buildExpiryHtml(property, certificate, daysExpired, true), true);
-
-            mailSender.send(message);
-            System.out.println("Certificate expired alert sent for: " + property.getAddress());
-            return true;
-        } catch (Exception e) {
-            System.err.println("Failed to send certificate expired alert: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
+        String subject = certificate.getCertificateType() + " EXPIRED - " + property.getAddress();
+        String html = buildExpiryHtml(property, certificate, daysExpired, true);
+        boolean sent = sendViaResend(getLandlordEmails(), subject, html);
+        if (sent) System.out.println("Certificate expired alert sent for: " + property.getAddress());
+        return sent;
     }
 
     public boolean sendRentPendingDailyReport(List<Property> pendingProperties) {
         if (!canSend() || pendingProperties.isEmpty()) return false;
 
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(getLandlordEmails());
-            helper.setSubject("Daily Rent Pending Report - " + java.time.LocalDate.now());
-            helper.setText(buildDailyReportHtml(pendingProperties), true);
-
-            mailSender.send(message);
-            System.out.println("Daily rent pending report sent to " + landlordEmail);
-            return true;
-        } catch (Exception e) {
-            System.err.println("Failed to send daily rent report: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
+        String subject = "Daily Rent Pending Report - " + java.time.LocalDate.now();
+        String html = buildDailyReportHtml(pendingProperties);
+        boolean sent = sendViaResend(getLandlordEmails(), subject, html);
+        if (sent) System.out.println("Daily rent pending report sent to " + landlordEmail);
+        return sent;
     }
 
     public boolean sendRentPendingNotification(Property property, int daysOverdue) {
         if (!canSend()) return false;
 
+        String subject = "Rent Pending Alert - " + property.getAddress();
+        String html = buildSinglePropertyReminderHtml(property, daysOverdue);
+        boolean sent = sendViaResend(getLandlordEmails(), subject, html);
+        if (sent) System.out.println("Rent pending notification sent for: " + property.getAddress());
+        return sent;
+    }
+
+    /**
+     * Posts to Resend's HTTPS API. Returns true only on a genuine 2xx response -
+     * any non-2xx or network failure is logged (with the response body, where available)
+     * and returns false rather than throwing, so callers never crash on a send failure.
+     */
+    private boolean sendViaResend(String[] toAddresses, String subject, String htmlBody) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("from", resendFromName + " <" + resendFromEmail + ">");
+            payload.put("to", toAddresses);
+            payload.put("subject", subject);
+            payload.put("html", htmlBody);
 
-            helper.setFrom(fromEmail);
-            helper.setTo(getLandlordEmails());
-            helper.setSubject("Rent Pending Alert - " + property.getAddress());
-            helper.setText(buildSinglePropertyReminderHtml(property, daysOverdue), true);
+            String jsonBody = objectMapper.writeValueAsString(payload);
 
-            mailSender.send(message);
-            System.out.println("Rent pending notification sent for: " + property.getAddress());
-            return true;
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .header("Content-Type", "application/json")
+                    .timeout(Duration.ofSeconds(15))
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                return true;
+            }
+
+            System.err.println("Resend API error (" + response.statusCode() + "): " + response.body());
+            return false;
         } catch (Exception e) {
-            System.err.println("Failed to send rent notification: " + e.getMessage());
+            System.err.println("Failed to send email via Resend: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
+    }
+
+    private String[] getLandlordEmails() {
+        return Arrays.stream(landlordEmail.split(","))
+                .map(String::trim)
+                .filter(email -> !email.isEmpty())
+                .toArray(String[]::new);
     }
 
     private String buildDailyReportHtml(List<Property> properties) {
@@ -190,7 +205,11 @@ public class EmailService {
     private boolean canSend() {
         if (!notificationsEnabled) return false;
         if (landlordEmail == null || landlordEmail.isBlank()) {
-            System.out.println("Skipping certificate email - landlord.email not configured");
+            System.out.println("Skipping email - landlord.email not configured");
+            return false;
+        }
+        if (resendApiKey == null || resendApiKey.isBlank()) {
+            System.out.println("Skipping email - RESEND_API_KEY not configured");
             return false;
         }
         return true;
@@ -225,12 +244,5 @@ public class EmailService {
         html.append("<div class='footer'>This is an automated message from your Property Management System</div>");
         html.append("</div></body></html>");
         return html.toString();
-    }
-
-    private String[] getLandlordEmails() {
-        return java.util.Arrays.stream(landlordEmail.split(","))
-                .map(String::trim)
-                .filter(email -> !email.isEmpty())
-                .toArray(String[]::new);
     }
 }

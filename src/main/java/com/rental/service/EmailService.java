@@ -29,11 +29,11 @@ public class EmailService {
     @Value("${brevo.api.key:}")
     private String brevoApiKey;
 
-    @Value("${brevo.from.email:}")
-    private String brevoFromEmail;
+    @Value("${brevo.sender.email:}")
+    private String brevoSenderEmail;
 
-    @Value("${brevo.from.name:Property Manager}")
-    private String brevoFromName;
+    @Value("${brevo.sender.name:Property Manager}")
+    private String brevoSenderName;
 
     @Value("${notification.enabled:true}")
     private boolean notificationsEnabled;
@@ -259,9 +259,9 @@ public class EmailService {
                     "sender",
                     Map.of(
                             "name",
-                            brevoFromName,
+                            brevoSenderName,
                             "email",
-                            brevoFromEmail
+                            brevoSenderEmail
                     )
             );
 
@@ -765,12 +765,12 @@ public class EmailService {
         }
 
 
-        if (brevoFromEmail == null
-                || brevoFromEmail.isBlank()) {
+        if (brevoSenderEmail == null
+                || brevoSenderEmail.isBlank()) {
 
             System.out.println(
                     "Skipping email - "
-                            + "BREVO_FROM_EMAIL not configured"
+                            + "BREVO_SENDER_EMAIL not configured"
             );
 
             return false;
